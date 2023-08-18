@@ -43,8 +43,11 @@ g_top = 0
 
 if __name__ == "__main__":
     n = int(input())
+    ops = []
     for _ in range(n):
-        args = input().split()
+        ops.append(input().split())
+
+    for args in ops:
         match args[0]:
             case "push":
                 g_stack[g_top] = int(args[1])
