@@ -1,4 +1,4 @@
-def sol(n: str, k: int) -> int:
+def sol(n: str, k: int) -> str:
     """n에서 k개의 숫자를 지웠을 때 얻을 수 있는 가장 큰 수를 출력한다"""
     stack = []
     for digit in (int(x) for x in n):
@@ -9,7 +9,7 @@ def sol(n: str, k: int) -> int:
     while k > 0:
         k -= 1
         stack.pop()
-    return int("".join([str(x) for x in stack]))
+    return "".join([str(x) for x in stack])
 
 
 if __name__ == "__main__":
