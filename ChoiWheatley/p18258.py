@@ -2,10 +2,10 @@ from collections import deque
 from sys import stdin
 
 n = int(stdin.readline().strip())
-ops = [stdin.readline().strip().split() for _ in range(n)]
 queue = deque(maxlen=2_000_000)
 
-for args in ops:
+for _ in range(n):
+    args = stdin.readline().strip().split()
     match args[0]:
         case "push":
             queue.append(int(args[1]))
