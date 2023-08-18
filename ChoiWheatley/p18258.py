@@ -9,22 +9,22 @@ for args in ops:
         case "push":
             queue.append(int(args[1]))
         case "pop":
-            try:
+            if len(queue) <= 0:
+                print(-1)
+            else:
                 print(queue[0])
                 queue.popleft()
-            except IndexError:
-                print(-1)
         case "size":
             print(len(queue))
         case "empty":
             print(1 if len(queue) <= 0 else 0)
         case "front":
-            try:
+            if len(queue) <= 0:
+                print(-1)
+            else:
                 print(queue[0])
-            except IndexError:
-                print(-1)
         case "back":
-            try:
-                print(queue[-1])
-            except IndexError:
+            if len(queue) <= 0:
                 print(-1)
+            else:
+                print(queue[-1])
