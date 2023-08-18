@@ -6,6 +6,9 @@ def sol(n: int, k: int) -> int:
             k -= 1
             stack.pop()
         stack.append(digit)
+    while k > 0:
+        k -= 1
+        stack.pop()
     return int("".join([str(x) for x in stack]))
 
 
