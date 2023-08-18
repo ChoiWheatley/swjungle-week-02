@@ -1,8 +1,9 @@
 from collections import deque
+from sys import stdin
 
-n = int(input())
-ops = [input().split() for _ in range(n)]
-queue = deque()
+n = int(stdin.readline().strip())
+ops = [stdin.readline().strip().split() for _ in range(n)]
+queue = deque(maxlen=2_000_000)
 
 for args in ops:
     match args[0]:
