@@ -7,8 +7,7 @@ https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=AV-
 1. maxheap.size == minheap.size
 2. maxheap.peek() < mid < minheap.peek()
 """
-from bisect import bisect_left
-from typing import Any, Iterable, List
+from typing import Any, Generator, Iterable
 from heap import Heap, Comparable
 from sys import stdin, stdout
 
@@ -31,34 +30,40 @@ class MaxHeap(Comparable):
         return self.value > other.value
 
 
-def solve(seq: Iterable[int]) -> List[int]:
+def solve(seq: Iterable[int]) -> Generator[int, Any, Any]:
     it = iter(seq)
-    mid = [it.__next__()]
     minheap = Heap(MinHeap)
     maxheap = Heap(MaxHeap)
-    ret = [mid[0]]
+    mid = it.__next__()
+    yield mid
 
     for count, new in enumerate(it, start=2):
         if count % 2 == 0:
-            if mid[0] < new:
+            # 짝수인 경우 mid를 사용하지 않는다. 대신 두 힙의 루트가 곧 중앙값이
+            # 되게 만든다.
+            if mid < new:
                 minheap.insert(MinHeap(new))
-                mid.append(minheap.peek().value)
-                minheap.pop()
+                maxheap.insert(MaxHeap(mid))
             else:
                 maxheap.insert(MaxHeap(new))
-                mid.insert(0, maxheap.peek().value)
-                maxheap.pop()  # maxheap 개수가 하나 더 많아졌으므로
+                minheap.insert(MinHeap(mid))
+            mid = maxheap.peek().value  # 중앙값 두개 중 작은 것을 리턴하라고 했으므로
 
         else:
-            # 홀수개일 경우 len(mids) = 3으로 만든 뒤에 가운데 값을 제외한
+            # 홀수개일 경우 mid 변수에 중앙값을 추가한다.
             # 나머지를 두 힙에 추가한다.
-            mid.insert(bisect_left(mid, new), new)
-            maxheap.insert(MaxHeap(mid[0]))
-            minheap.insert(MinHeap(mid[2]))
-            mid = [mid[1]]
+            if new < maxheap.peek().value:
+                mid = maxheap.peek().value
+                maxheap.pop()
+                maxheap.insert(MaxHeap(new))
+            elif minheap.peek().value < new:
+                mid = minheap.peek().value
+                minheap.pop()
+                minheap.insert(MinHeap(new))
+            else:
+                mid = new
 
-        ret.append(mid[0])
-    return ret
+        yield mid
 
 
 if __name__ == "__main__":
