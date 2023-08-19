@@ -7,12 +7,12 @@ https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=AV-
 1. maxheap.size == minheap.size
 2. maxheap.peek() < mid < minheap.peek()
 """
-from typing import Any
-from heap import Heap, Comparable
+from typing import Any, Generator, Iterable, List
 from sys import stdin, stdout
+from heapq import heappush, heappop
 
 
-class MinHeap(Comparable):
+class MinHeap:
     def __init__(self, n=0):
         super().__init__()
         self.value = n
@@ -21,7 +21,7 @@ class MinHeap(Comparable):
         return self.value < other.value
 
 
-class MaxHeap(Comparable):
+class MaxHeap:
     def __init__(self, n=0):
         super().__init__()
         self.value = n
@@ -30,33 +30,47 @@ class MaxHeap(Comparable):
         return self.value > other.value
 
 
+def solve(seq: Iterable[int]) -> Generator[int, Any, Any]:
+    it = iter(seq)
+    leftheap: List[MaxHeap] = []
+    rightheap: List[MinHeap] = []
+    mid = it.__next__()
+    yield mid
+
+    for count, new in enumerate(it, start=2):
+        if count % 2 == 0:
+            # mid 변수에 new를 할당하지 않는다.
+            # 두 중앙값은 두 힙의 루트에 존재
+            if mid < new:
+                heappush(rightheap, MinHeap(new))
+                heappush(leftheap, MaxHeap(mid))
+            else:
+                heappush(leftheap, MaxHeap(new))
+                heappush(rightheap, MinHeap(mid))
+            mid = leftheap[0].value
+
+        else:
+            # mid 변수에 new를 할당한다. 다만, new의 위치에 따라서
+            # 다양한 케이스가 존재
+            if new < leftheap[0].value:
+                # new go left, root of leftheap become mid
+                mid = leftheap[0].value
+                heappop(leftheap)
+                heappush(leftheap, MaxHeap(new))
+            elif rightheap[0].value < new:
+                # new go right, root of rightheap become mid
+                mid = rightheap[0].value
+                heappop(rightheap)
+                heappush(rightheap, MinHeap(new))
+            else:
+                mid = new
+
+        yield mid
+
+
 if __name__ == "__main__":
     n = int(stdin.readline().strip())
-    mid = int(stdin.readline().strip())
-    print(mid)
-    n -= 1  # 이미 하나를 셌으니까
-    minheap = Heap(MinHeap)
-    maxheap = Heap(MaxHeap)
+    gen = (int(stdin.readline().strip()) for _ in range(n))
 
-    for _ in range(n):
-        new = int(stdin.readline().strip())
-        if mid < new:
-            minheap.insert(MinHeap(new))
-        else:
-            maxheap.insert(MaxHeap(new))
-
-        # 그리고 두 힙의 개수를 맞춤과 동시에 mid 결정
-        while len(minheap) < len(maxheap):
-            minheap.insert(MinHeap(mid))
-            tmp = maxheap.peek()
-            if tmp is not None:
-                mid = tmp.value
-                maxheap.pop()
-        while len(maxheap) < len(minheap):
-            maxheap.insert(MaxHeap(mid))
-            tmp = minheap.peek()
-            if tmp is not None:
-                mid = tmp.value
-                minheap.pop()
-
-        print(mid)
+    for i in solve(gen):
+        stdout.write(str(i) + "\n")
