@@ -7,12 +7,12 @@ https://swexpertacademy.com/main/code/problem/problemDetail.do?contestProbId=AV-
 1. maxheap.size == minheap.size
 2. maxheap.peek() < mid < minheap.peek()
 """
-from typing import Any, Generator, Iterable
-from heap import Heap, Comparable
+from typing import Any, Generator, Iterable, List
 from sys import stdin, stdout
+from heapq import heappush, heappop
 
 
-class MinHeap(Comparable):
+class MinHeap:
     def __init__(self, n=0):
         super().__init__()
         self.value = n
@@ -21,7 +21,7 @@ class MinHeap(Comparable):
         return self.value < other.value
 
 
-class MaxHeap(Comparable):
+class MaxHeap:
     def __init__(self, n=0):
         super().__init__()
         self.value = n
@@ -32,34 +32,36 @@ class MaxHeap(Comparable):
 
 def solve(seq: Iterable[int]) -> Generator[int, Any, Any]:
     it = iter(seq)
-    minheap = Heap(MinHeap)
-    maxheap = Heap(MaxHeap)
+    leftheap: List[MaxHeap] = []
+    rightheap: List[MinHeap] = []
     mid = it.__next__()
     yield mid
 
     for count, new in enumerate(it, start=2):
         if count % 2 == 0:
-            # 짝수인 경우 mid를 사용하지 않는다. 대신 두 힙의 루트가 곧 중앙값이
-            # 되게 만든다.
+            # mid 변수에 new를 할당하지 않는다.
+            # 두 중앙값은 두 힙의 루트에 존재
             if mid < new:
-                minheap.insert(MinHeap(new))
-                maxheap.insert(MaxHeap(mid))
+                heappush(rightheap, MinHeap(new))
+                heappush(leftheap, MaxHeap(mid))
             else:
-                maxheap.insert(MaxHeap(new))
-                minheap.insert(MinHeap(mid))
-            mid = maxheap.peek().value  # 중앙값 두개 중 작은 것을 리턴하라고 했으므로
+                heappush(leftheap, MaxHeap(new))
+                heappush(rightheap, MinHeap(mid))
+            mid = leftheap[0].value
 
         else:
-            # 홀수개일 경우 mid 변수에 중앙값을 추가한다.
-            # 나머지를 두 힙에 추가한다.
-            if new < maxheap.peek().value:
-                mid = maxheap.peek().value
-                maxheap.pop()
-                maxheap.insert(MaxHeap(new))
-            elif minheap.peek().value < new:
-                mid = minheap.peek().value
-                minheap.pop()
-                minheap.insert(MinHeap(new))
+            # mid 변수에 new를 할당한다. 다만, new의 위치에 따라서
+            # 다양한 케이스가 존재
+            if new < leftheap[0].value:
+                # new go left, root of leftheap become mid
+                mid = leftheap[0].value
+                heappop(leftheap)
+                heappush(leftheap, MaxHeap(new))
+            elif rightheap[0].value < new:
+                # new go right, root of rightheap become mid
+                mid = rightheap[0].value
+                heappop(rightheap)
+                heappush(rightheap, MinHeap(new))
             else:
                 mid = new
 
