@@ -4,20 +4,31 @@
 임의의 정점을 가지고 모든 노드를 순회할 수 있다면 그 그래프는 이분 그래프가 아닌거네?
 """
 
-from typing import List
+from functools import reduce
+from typing import Callable, List, Set, Tuple
 from sys import stdin
 
 # 연결리스트
 g_nodes: List[List[int]] = [[]]
 
 
-def r_visit(visited: List[bool], idx: int):
+def r_visit(visited: List[bool], idx: int, hook: Callable[[int], None]):
     """단순 DFS 순회"""
     visited[idx] = True
+    hook(idx)
     for next in g_nodes[idx]:
         if visited[next]:
             continue
-        r_visit(visited, next)
+        r_visit(visited, next, hook)
+
+
+class PingPong:
+    sets: Tuple[Set[int], Set[int]] = (set(), set())
+    count = 0
+
+    def hook(self, idx: int):
+        self.sets[self.count % 2].add(idx)
+        self.count += 1
 
 
 if __name__ == "__main__":
@@ -34,6 +45,10 @@ if __name__ == "__main__":
 
         visited = [False for _ in range(V + 1)]
         visited[0] = True
-        r_visit(visited, 1)
-        # 순회가 끝났는데 하나라도 visited가 True가 아니라면 이건 이분 그래프가 가능하다.
-        print("YES" if all(visited) else "NO")
+
+        pingpong = PingPong()
+        r_visit(visited, 1, pingpong.hook)
+        if len(reduce(lambda acc, set_: acc.intersection(set_), pingpong.sets)) > 0:
+            print("NO")
+        else:
+            print("YES")
