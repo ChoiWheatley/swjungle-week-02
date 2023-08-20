@@ -14,19 +14,20 @@ def sol(G: List[Tuple[int, int, int]]) -> int:
     - G: 연결리스트 형식의 그래프, 각 원소는 (시작 정점번호, 인접 정점번호, 가중치)로 이루어져 있다. 1부터 센다.
 
     """
-    t = set()  # 순환탐지용
-    ret = 0  # 가중치합
+    parent = [i for i in range(len(G))]  # 순환탐지용
     G[1:].sort(key=lambda e: e[1])
-    for u, v, weight in G[1:]:
-        if u in t and v in t:
-            # cycle!!!
+    parent[G[1][1]] = G[1][0]  # 루트노드를 G[1][0]으로 설정한다.
+    ret = G[1][2]  # 가중치합
+    for u, v, weight in G[2:]:
+        if parent[u] == G[1][0] and parent[v] == G[1][0]:
+            # cycle!
             continue
 
         ret += weight
-        if u not in t:
-            t.add(u)
-        if v not in t:
-            t.add(v)
+
+        # 루트노드를 parent로 지정하는 것으로 간편하게 순환검사를 할 수 있다.
+        parent[u] = G[1][0]
+        parent[v] = G[1][0]
 
     return ret
 
