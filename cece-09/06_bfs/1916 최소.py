@@ -3,48 +3,36 @@ from heapq import heappop, heappush
 
 N = int(input())
 M = int(input())
-# adj = [[0 for _ in range(N)] for _ in range(N)]
-cost = [[-1 for _ in range(N)] for _ in range(N)]
-dist = [-1 for _ in range(N)]
+
+inf = float('inf')
+cost = [[inf for _ in range(N)] for _ in range(N)]
+dist = [inf for _ in range(N)]
 
 for _ in range(M):
     u, v, c = map(int, input().split())
-    # adj[u-1][v-1] = 1
-    if cost[u-1][v-1] > c or cost[u-1][v-1] == -1:
-        cost[u-1][v-1] = c  # edge cost가 여러 개 나올 수 있으므로 최솟값으로 저장
+    # edge cost가 여러 개 나올 수 있으므로 최솟값으로 저장
+    cost[u-1][v-1] = min(cost[u-1][v-1], c)
 
 s, e = map(int, input().split())
 
 
 def dijkstra(s):
-    queue = deque()
-    queue.append(s)
+    queue = []
+    heappush(queue, (0, s))
+
     dist[s] = 0  # s to s = 0
-    # print(f"[{s+1}]", end=' ')
 
     while queue:
-        fr = queue.popleft()
-        # print(f"- {fr+1}", end=' ')
-        adj_nodes = []
-        for i in range(N):
-            if cost[fr][i] >= 0:
-                if -1 < dist[i] <= dist[fr] + cost[fr][i]:
-                    continue  # 이미 최소 거리인 경우
-                if dist[i] == -1:  # 방문하지 않은 인접노드 중 weight이 가장 작은 것부터 탐색
-                    heappush(adj_nodes, (cost[fr][i], i))
-                dist[i] = dist[fr] + cost[fr][i]
+        d, u = heappop(queue)
 
-        while adj_nodes:
-            min_weight = heappop(adj_nodes)
-            queue.append(min_weight[1])
+        if dist[u] < d:
+            continue  # 최소 거리로 업데이트 할 필요가 없는 경우
 
-    # print("\n-- mincost --")
-    # for i in range(N):
-    #     print(f"[{i+1}] {mincost[i]}")
+        for v in range(N):  # u - v
+            if d + cost[u][v] < dist[v]:  # 인접해 있지 않으면 cost/dist는 inf
+                dist[v] = d + cost[u][v]
+                heappush(queue, (dist[v], v))  # 현재까지의 경로가 가장 짧은 경우를 먼저 검사
 
 
-if s == e:
-    print(0)
-else:
-    dijkstra(s-1)
-    print(dist[e-1])
+dijkstra(s-1)
+print(dist[e-1])
