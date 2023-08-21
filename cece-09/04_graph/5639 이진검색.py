@@ -1,5 +1,7 @@
 import sys
 
+# 배열로 다시 풀어볼 것
+
 sys.setrecursionlimit(10**8)  # 없으면 recursion error
 
 
