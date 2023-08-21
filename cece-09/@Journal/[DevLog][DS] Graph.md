@@ -165,7 +165,12 @@ if 정점 v가 시작 노드(root)라면:
 child가 하나일 경우 단절점이 될 수 없고, 그렇지 않으면 단절점이다.
 ```
 그림을 보고 이해해 보자
+그림1 DFS -> 스패닝 트리 -> 백 에지
+그림2 DFN LOW 
 
+Reference
+
+[이중 연결 성분 알고리즘의 구현](https://makemethink.tistory.com/148)
 #### 
 
 ## 04) Minimum Cost Spanning Tree [MST]
