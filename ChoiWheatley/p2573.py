@@ -4,12 +4,11 @@
 2. find separation
 """
 
-import sys
-from typing import List, Tuple
+from collections import defaultdict
+from sys import stdin
+from typing import Dict, List, Set, Tuple
 
-sys.setrecursionlimit(15000)
-
-delta = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+g_delta = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 
 
 class Glaciers:
@@ -17,82 +16,108 @@ class Glaciers:
     yr: int
     N: int
     M: int
+    lands: Dict[Tuple[int, int], int]  # 남은 살아있는 빙산들의 {(row, col): height}를 저장하는 배열
 
-    def __init__(self, status: List[List[int]], N: int, M: int):
+    def __init__(self, status: List[List[int]]):
         self.status = status
         self.yr = 0
-        self.N = N
-        self.M = M
+        self.N = len(status)
+        self.M = len(status[0])
+        self.lands = defaultdict(int)
+
+        for i in range(self.N):
+            for j in range(self.M):
+                if status[i][j] > 0:
+                    self.lands[(i, j)] = status[i][j]
 
     def __count_zeros(self, r: int, c: int) -> int:
         """(r,c) 빙산 근처 바다의 수를 센다"""
         count = 0
-        for d in delta:
+        for d in g_delta:
             if self.status[r + d[0]][c + d[1]] <= 0:
                 count += 1
         return count
 
     def next_year(self):
         """빙산이 분리, 동서남북 네 방향으로 붙어있는 0이 저장된 칸의 개수만큼 줄어든다"""
-        diff = [[0 for _ in range(self.M)] for _ in range(self.N)]
+        melts: List[Tuple[int, int, int]] = []  # (r, c, amount)
 
-        for i in range(self.N):
-            for j in range(self.M):
-                if self.status[i][j] > 0:
-                    diff[i][j] += self.__count_zeros(i, j)
+        for i, j in self.lands:
+            cnt = self.__count_zeros(i, j)
+            if cnt > 0:
+                melts.append((i, j, cnt))
 
         # do subtraction
-        for i in range(self.N):
-            for j in range(self.M):
-                self.status[i][j] -= diff[i][j]
+        # 여기서 또 N * N을 돌지말고 줄일 놈만 따로 저장하는 방법을 고안하자.
+        for i, j, amt in melts:
+            if self.status[i][j] <= amt:
+                self.status[i][j] = 0
+                self.lands.pop((i, j))
+            else:
+                self.status[i][j] -= amt
+                self.lands[(i, j)] = self.status[i][j]
 
         # change year
         self.yr += 1
 
     def is_separated(self) -> bool:
-        """빙산이 적어도 두 조각 이상으로 분리되었는가?"""
-        visited = [[True for _ in range(self.M)] for _ in range(self.N)]
+        """빙산이 적어도 두 조각 이상으로 분리되었는가?
 
-        for i in range(self.N):
-            for j in range(self.M):
-                if self.status[i][j] > 0:
-                    visited[i][j] = False
+        DFS를 사용하여 탐색하는 건 맞는데 좀 더 빠르게 빙산을 찾을 방법을 구해야 한다.
 
-        alive = (0, 0)
-        for i in range(self.N):
-            for j in range(self.M):
-                if self.status[i][j] > 0:
-                    alive = i, j
+        visited를 만들지 말고 DFS 순회 하면서 카운트 한 개수가 전체 빙산 개수보다
+        적으면 나뉘어진 것이다.
+        """
+        remain_cnt = len(self.lands)
+        land = next(iter(self.lands))
+        walk_cnt = self.__walk_dfs(*land)
 
-        self.__r_walk(visited, *alive)
+        return walk_cnt < remain_cnt
 
-        if not all(all(elem for elem in line) for line in visited):
-            return True
-        return False
+    def __walk_dfs(self, r, c) -> int:
+        """DFS 순회를 돌면서 단순히 방문한 노드의 개수만 리턴한다."""
+        if self.lands.get((r, c)) is None:
+            return 0
 
-    def __r_walk(self, visited: List[List[bool]], r: int, c: int):
-        """동서남북 네 방향으로 이동하며 덩어리를 모두 순회한다."""
-        if visited[r][c]:
-            return
-        visited[r][c] = True
-        for d in delta:
-            r_ = r + d[0]
-            c_ = c + d[1]
-            if visited[r_][c_]:
+        visited: Set[Tuple[int, int]] = set()
+        stack: List[Tuple[int, int]] = [(r, c)]
+        cnt = 0
+
+        while stack:
+            r, c = stack.pop()
+            is_visited = (r, c) in visited
+            if is_visited:
                 continue
-            self.__r_walk(visited, r_, c_)
+            visited.add((r, c))
+
+            cnt += 1
+            for dy, dx in g_delta:
+                r_ = r + dy
+                c_ = c + dx
+
+                is_ocean = self.status[r_][c_] == 0
+                is_visited = (r_, c_) in visited
+                if is_visited or is_ocean:
+                    continue
+
+                stack.append((r_, c_))
+
+        return cnt
+
+
+def sol(gla: Glaciers) -> int:
+    # glaciers.remain을 활용하여 굳이 여기에서 또 N*N을 돌 필요 없게 만들어보자.
+    while len(gla.lands) > 0:
+        if gla.is_separated():
+            return gla.yr
+        gla.next_year()
+
+    return 0
 
 
 if __name__ == "__main__":
-    n, m = [int(x) for x in input().split()]
-    status = [[int(x) for x in input().split()] for _ in range(n)]
+    n, m = [int(x) for x in stdin.readline().split()]
+    status = [[int(x) for x in stdin.readline().split()] for _ in range(n)]
+    glaciers = Glaciers(status)
 
-    glaciers = Glaciers(status, n, m)
-
-    while not all(all(x <= 0 for x in row) for row in glaciers.status):
-        if glaciers.is_separated():
-            print(glaciers.yr)
-            exit(0)
-        glaciers.next_year()
-
-    print(0)
+    print(sol(glaciers))
