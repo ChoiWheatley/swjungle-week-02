@@ -82,6 +82,7 @@ def sol(start: Pos, end: Pos, MAZE: Bitset2D, N: int) -> int:
     """
     dist: list[list[int | None]] = [[None for _ in range(N)] for _ in range(N)]
     queue: list[Key] = [Key(start, 0)]
+    dist[0][0] = 0
 
     while queue:
         cur = heappop(queue)
@@ -102,7 +103,7 @@ def sol(start: Pos, end: Pos, MAZE: Bitset2D, N: int) -> int:
             heappush(queue, Key(adj, adj_w))
 
     ret = dist[end.r][end.c]
-    if ret:
+    if ret is not None:
         return ret
     return maxsize
 
