@@ -136,6 +136,42 @@ def dfs(n, cnt):
 3. spt는 n-vertices인 그래프에서 n-1개의 간선을 갖는다
 
 ### 5. 이중 연결 요소 Biconnected Components
+* 무향 그래프를 가정한다. (유향 그래프에서는 SCC, strongly connected component 개념이 존재한다.)
+* 단절점 articulation point은 정점 v에 대해, v와 v에 incident한 간선을 모두 제거했을 때 적어도 두 개의 connected-component가 존재하게 되는 정점을 말한다. 즉, 정점을 제거했을 때 그래프가 둘 이상으로 분할되는 정점이다.
+* 이중 연결 그래프 (Biconnected Graph)는 단절점이 없는 그래프이다.
+* 이중 연결 요소 (Binconnected Components)는 connected undirected graph에서 biconnected된 모든 subgraph이다.
+
+#### 이중 연결 요소의 특징
+* 두 BCC는 하나 이상의 공통된 정점을 갖지 않는다.
+* 어떤 간선도 둘 이상의 BCC에 속할 수 없다.
+* 따라서 그래프의 BCC는 간선을 partition분할한다고 할 수 있다.
+
+![bcc](/cece-09/@Journal/image/graph-04.jpeg)
+
+#### 단절점 찾기
+단절점 찾기 알고리즘은 DFS를 응용하여 구현할 수 있다.
+##### DFN Depth-first number
+[Depth First Search?]
+1. 깊이를 기준으로 탐색한다.
+2. 더 작은 정점부터 탐색한다.
+
+DFN은 DFS를 수행했을 때의 방문 순서를 의미한다. DFS를 수행하면, 그 방문 순서에 따라 스패닝 트리를 구성할 수 있다. 또, 스패닝 트리에 포함되지 않는 non-tree edge를 back edge라고 한다. 
+
+```python
+if 정점 v가 시작 노드(root)가 아니라면:
+하나의 정점 v에 대해, left/right sub tree의 모든 자식 노드들이 v보다 상위 노드로 연결되는 back edge를 가지지 않는다면, v는 단절점이 될 수 있다.
+
+if 정점 v가 시작 노드(root)라면:
+child가 하나일 경우 단절점이 될 수 없고, 그렇지 않으면 단절점이다.
+```
+그림을 보고 이해해 보자
+그림1 DFS -> 스패닝 트리 -> 백 에지
+그림2 DFN LOW 
+
+Reference
+
+[이중 연결 성분 알고리즘의 구현](https://makemethink.tistory.com/148)
+#### 
 
 ## 04) Minimum Cost Spanning Tree [MST]
 ### Kruskal's
