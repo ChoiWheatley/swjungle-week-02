@@ -1,11 +1,12 @@
 '''
 Knapsack Problem
 * P[n][k] = 무게 제한이 k일 때, n개의 물건을 knapsack에 담아 얻을 수 있는 최대 가치
-* 0-1은 NP-hard/Fraction은 다항 시간 내 솔루션이 있음
+* 0-1은 NP-hard, Fraction은 다항 시간 내 솔루션이 있음
 
 * 동전 문제는 무게의 제한이 없는 경우 (각각의 동전은 몇 개라도 사용할 수 있다)
 * n개의 물건을 사용해 k가치를 만들 때, 최소의 무게를 구하시오
 '''
+
 import sys
 inf = float('inf')
 N, K = map(int, input().split())
