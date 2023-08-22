@@ -4,12 +4,12 @@
 """
 
 from enum import Enum
-from typing import Any, Callable, Generator, List, Tuple
+from typing import List
 
 
 class Op(Enum):
     Add = 0
-    Del = 1
+    Sub = 1
     Mul = 2
     Div = 3
 
@@ -17,20 +17,43 @@ class Op(Enum):
         match self:
             case Op.Add:
                 return lhs + rhs
-            case Op.Del:
+            case Op.Sub:
                 return lhs - rhs
             case Op.Mul:
                 return lhs * rhs
             case Op.Div:
+                if lhs < 0 and rhs > 0:
+                    return -(-lhs // rhs)
                 return lhs // rhs
 
 
-g_num: List[int] = []
+g_operation_cnt: List[int] = [0, 0, 0, 0]
+g_max = -(1 << 31)
+g_min = 1 << 31
+g_list = []
+N = 11
 
-def r_decision_tree(rem: List[int]) -> Generator[Op, Any, Any]:
-    """
-    - rem: 남은 연산자의 개수를 +-*/ 순으로 나열
-    """
-    if all(x == 0 for x in rem):
-        return acc
 
+def r_sol(idx: int, acc: int):
+    global g_max, g_min
+    if idx >= N - 1:
+        g_max = max(g_max, acc)
+        g_min = min(g_min, acc)
+        return
+
+    for i, cnt in enumerate(g_operation_cnt):
+        if cnt > 0:
+            g_operation_cnt[i] -= 1
+            r_sol(idx + 1, Op(i)(acc, g_list[idx + 1]))
+            g_operation_cnt[i] += 1
+
+
+if __name__ == "__main__":
+    N = int(input())
+    g_list = [int(x) for x in input().split()]
+    g_operation_cnt = [int(x) for x in input().split()]
+
+    r_sol(0, g_list[0])
+
+    print(g_max)
+    print(g_min)
