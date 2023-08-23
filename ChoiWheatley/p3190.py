@@ -1,7 +1,10 @@
 """뱀"""
 from collections import deque
 from enum import Enum
-from typing import List, Set, Tuple
+from itertools import islice
+from typing import Iterable, List, Self, Set, Tuple
+
+INF = 100000
 
 
 def int2tuple(i: int, side: int) -> Tuple[int, int]:
@@ -25,11 +28,11 @@ class Ori(Enum):
     S = 2
     W = 3
 
-    def rotate(self, to: Rotation):
+    def rotate(self, to: Rotation) -> Self:
         if to == Rotation.CCW:
-            self.value = (self.value + 3) % 4
+            return Ori((self.value + 3) % 4)
         else:
-            self.value = (self.value + 1) % 4
+            return Ori((self.value + 1) % 4)
 
 
 class Snake:
@@ -42,9 +45,10 @@ class Snake:
         self.orientation = Ori.E
         self.side = side
 
+    @property
     def ahead(self) -> int:
         """뱀 머리가 바라보는 방향 한 칸 앞을 리턴"""
-        head = self.head()
+        head = self.head
         match self.orientation:
             case Ori.N:
                 return head - self.side
@@ -55,20 +59,25 @@ class Snake:
             case Ori.W:
                 return head - 1
 
+    @property
     def head(self) -> int:
         """뱀 머리 맨날 self.queue[-1] 하기 싫잖아"""
         return self.queue[-1]
+
+    @property
+    def body(self) -> Iterable[int]:
+        return islice(self.queue, len(self.queue) - 1)
 
     def move_forward(self, tail=False):
         """
         - tail: tail을 그대로 둘 것인지(T), 잘라버릴 것인지 결정(F)
         """
-        self.queue.append(self.ahead())
+        self.queue.append(self.ahead)
         if not tail:
             self.queue.popleft()
 
     def rotate(self, to: Rotation):
-        self.orientation.rotate(to)
+        self.orientation = self.orientation.rotate(to)
 
 
 class GameController:
@@ -97,20 +106,29 @@ class GameController:
         - time: 게임시작 시간으로부터 지난 초 (해당 초가 끝난 시점)
         - rotation: time 초가 끝난 뒤에 왼쪽 혹은 오른쪽으로 90도 방향을 회전시킨다.
         """
+        _s = self.snake
         time_delta = time - self.timestamp
 
         for t in range(time_delta):
             tail = False
-            ahead = self.snake.ahead()
-            if self.snake.ahead() in self.apples:
+            ahead = _s.ahead
+
+            if _s.ahead in self.apples:
                 tail = True
+                self.apples.remove(ahead)
+
             if not all(0 <= l < self.side for l in int2tuple(ahead, self.side)):
+                # FIXME - ahead가 우측 경계면에 닿지 않고 다음 줄 0번째 열로 점프하는 문제 발생
                 # 행, 열 하나라도 경계에 닿거나 벗어나게 되면
-                raise GameController.GameOver(time=self.timestamp + t)
+                raise GameController.GameOver(time=self.timestamp + t + 1)
 
-            self.snake.move_forward(tail)
+            for bodypart in _s.body:
+                if ahead == bodypart:
+                    raise GameController.GameOver(time=self.timestamp + t + 1)
 
-        self.snake.rotate(rotation)
+            _s.move_forward(tail)
+
+        _s.rotate(rotation)
         self.timestamp = time
 
 
@@ -123,12 +141,17 @@ if __name__ == "__main__":
         apples.append((r - 1, c - 1))
     controller = GameController(side, apples)
     l = int(input())
+    orders = [input().split() for _ in range(l)]
     try:
-        for _ in range(k):
-            time, rotation = input().split()
+        for time, rotation in orders:
             time = int(time)
             rotation = Rotation(rotation)
 
             controller.order(time, rotation)
+
+        while True:
+            # 게임오버가 나올때까지 직진
+            controller.order(INF, Rotation.CW)
+
     except GameController.GameOver as e:
         print(e.time)
