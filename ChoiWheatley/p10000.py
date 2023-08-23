@@ -1,90 +1,75 @@
 from dataclasses import dataclass
-from functools import total_ordering
-from typing import List, Self, Tuple
 from sys import stdin
-
-STUB_START = int(-2e9)
-STUB_END = int(2e9)
+from typing import Self
 
 
 @dataclass
-@total_ordering
 class Circle:
-    x: int  # 중심점
-    r: int  # 반지름
+    end: int
+    diameter: int
+
+    @property
+    def x(self) -> int:
+        return self.end - self.r
+
+    @property
+    def r(self) -> int:
+        return self.diameter // 2
+
+    @property
+    def start(self) -> int:
+        return self.end - self.diameter
 
     @classmethod
-    def from_pq(cls, p: int, q: int) -> Self:
-        """start, end포인트로 새 원을 생성한다."""
-        if p > q:
-            p, q = q, p
-        x = (p + q) // 2
-        r = (q - p) // 2
-        return Circle(x, r)
-
-    def get_pq(self) -> Tuple[int, int]:
-        x = self.x
-        r = self.r
-        return x - r, x + r
-
-    def get_start(self) -> int:
-        return self.x - self.r
-
-    def get_end(self) -> int:
-        return self.x + self.r
-
-    def is_overlap(self, other: Self) -> bool:
-        """내 안에 other가 들어가는지."""
-        p, q = self.get_pq()
-        return p <= other.x <= q and other.r <= self.r
+    def from_xr(cls, x: int, r: int) -> Self:
+        end = x + r
+        diameter = r * 2
+        return Circle(end, diameter)
 
     def __lt__(self, other: Self) -> bool:
-        """원의 왼쪽 끝점을 가지고 비교한다."""
-        return self.x - self.r < other.x - other.r
-
-    def __eq__(self, other: Self) -> bool:
-        return self.x == other.x and self.r == other.r
-
-
-g_arr: List[Circle] = []
+        """end, diameter를 기준으로 내림차순 정렬"""
+        if self.end == other.end:
+            return self.diameter < other.diameter
+        return self.end < other.end
 
 
-def r_sol(circle: Circle) -> int:
-    """[start, end] 구간 안에 들어있는 가장 큰 원들을 식별하고 재귀를 돌린다."""
-    stack: List[Circle] = []
-    sum_ = 1
-    for cur in g_arr:
-        if circle == cur:
-            continue
-        if not circle.is_overlap(cur):
-            continue
-        if len(stack) > 0 and stack[-1].is_overlap(cur):
-            # top원이 새로운 원을 감싸는 경우 넣지 말아야 한다.
-            continue
-        while len(stack) > 0 and cur.is_overlap(stack[-1]):
-            # 새로운 원이 top원을 감싸는 경우 stack을 교체하여야 한다.
-            stack.pop()
+def sol(circles: list[Circle]) -> int:
+    """원들이 만들어내는 영역의 개수를 계산하세요"""
+    stack: list[Circle] = []
+    result = 1
+
+    for cur in circles:
+        last_end = cur.end
+
+        while stack:
+            prev = stack.pop()
+            if prev.start >= cur.start and prev.end == last_end:
+                # prev가 cur의 내부에 있다. end, diameter 순으로 정렬을 했기 때문에
+                # prev.start < cur.start인 경우는 cur 밖에 있게된다.
+                # cur.end서부터 연속적으로 내부 원들이 서로 내접해 있는경우
+                last_end = prev.start
+            elif prev.start < cur.start:
+                # prev가 cur의 외부에 있다 => 검사를 포기하되, 스택을 다시 돌려놓자
+                stack.append(prev)
+                break
+
         stack.append(cur)
-    if len(stack) == 0:
-        # 애초에 비어있던 원이므로 중단조건에 해당한다.
-        return 1
-    if sum([c.r for c in stack]) == circle.r:
-        # 내부에 있는 원이 현재 원을 가득 채우기 때문에 영역이 한개 더 생긴다.
-        sum_ += 1
 
-    for child_circle in stack:
-        sum_ += r_sol(child_circle)
-
-    return sum_
+        if last_end == cur.start:
+            # 내부 원들이 외부 원을 가득 메운다.
+            result += 1
+        result += 1
+    return result
 
 
 if __name__ == "__main__":
     n = int(stdin.readline().strip())
+    circles: list[Circle] = []
+
     for _ in range(n):
-        x, r = [int(y) for y in stdin.readline().strip().split()]
-        g_arr.append(Circle(x, r))
+        x, r = [int(x) for x in stdin.readline().split()]
+        circles.append(Circle.from_xr(x, r))
 
-    # 가상의 가장 큰 원을 기준으로 재귀를 돌린다
-    stub = Circle.from_pq(STUB_START, STUB_END)
-
-    print(r_sol(stub))
+    # 끝점 기준으로 정렬, 같다면 지름이 작은 놈 기준으로 정렬
+    circles.sort()
+    print(sol(circles))
