@@ -51,6 +51,9 @@ if __name__ == "__main__":
         visited = [False for _ in range(V + 1)]
         visited[0] = True
 
-        r_visit(visited, 1, True)
+        for i in range(V):
+            if visited[i]:
+                continue
+            r_visit(visited, i, True)
 
         print("YES" if check_bipartite() else "NO")
