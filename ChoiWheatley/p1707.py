@@ -1,34 +1,37 @@
 """
 이분 그래프
 
-임의의 정점을 가지고 모든 노드를 순회할 수 있다면 그 그래프는 이분 그래프가 아닌거네?
+https://ko.wikipedia.org/wiki/%EC%9D%B4%EB%B6%84_%EA%B7%B8%EB%9E%98%ED%94%84
+
+> 그래프의 꼭짓점들을 DFS로 나열한 뒤, 각 꼭짓점들을 이웃 꼭짓점들과 다른 색으로 계속해서 칠해 나가면서, 같은 색깔의 꼭짓점이 서로 연결되어 있는 모순이 발생하는지 여부를 확인하면 된다.
 """
 
-from functools import reduce
-from typing import Callable, List, Set, Tuple
-from sys import stdin
+from typing import List
+from sys import stdin, setrecursionlimit
+
+setrecursionlimit(10**8)
 
 # 연결리스트
 g_nodes: List[List[int]] = [[]]
 
 
-def r_visit(visited: List[bool], idx: int, hook: Callable[[int], None]):
+def r_visit(visited: List[bool], idx: int, flag: bool):
     """단순 DFS 순회"""
     visited[idx] = True
-    hook(idx)
+    g_colors[idx] = flag
+
     for next in g_nodes[idx]:
         if visited[next]:
             continue
-        r_visit(visited, next, hook)
+        r_visit(visited, next, not flag)
 
 
-class PingPong:
-    sets: Tuple[Set[int], Set[int]] = (set(), set())
-    count = 0
-
-    def hook(self, idx: int):
-        self.sets[self.count % 2].add(idx)
-        self.count += 1
+def check_bipartite() -> bool:
+    for idx, adjs in enumerate(g_nodes[1:], start=1):
+        for adj in adjs:
+            if g_colors[idx] == g_colors[adj]:
+                return False
+    return True
 
 
 if __name__ == "__main__":
@@ -38,6 +41,8 @@ if __name__ == "__main__":
 
         # init g_nodes
         g_nodes = [[] for _ in range(V + 1)]  # ∵ index starts 1
+        g_colors = [False for _ in range(V + 1)]
+
         for _ in range(E):
             u, v = [int(x) for x in stdin.readline().split()]
             g_nodes[u].append(v)
@@ -46,9 +51,6 @@ if __name__ == "__main__":
         visited = [False for _ in range(V + 1)]
         visited[0] = True
 
-        pingpong = PingPong()
-        r_visit(visited, 1, pingpong.hook)
-        if len(reduce(lambda acc, set_: acc.intersection(set_), pingpong.sets)) > 0:
-            print("NO")
-        else:
-            print("YES")
+        r_visit(visited, 1, True)
+
+        print("YES" if check_bipartite() else "NO")
