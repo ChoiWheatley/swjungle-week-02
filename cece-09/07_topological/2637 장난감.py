@@ -49,6 +49,7 @@ while queue:
             queue.append(v)
         next = next.link
 
+
 for i in range(N):
-    if outdg[i] == 0:
-        print(i+1, needs[i])
+    # if outdg[i] == 0:
+    print(i+1, needs[i])

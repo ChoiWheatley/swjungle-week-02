@@ -1,24 +1,39 @@
-'''
-parent가 child보다 무거운 트리 만들기
-ex) 2-1과 5-1 간선이 순서대로 주어졌다면
-    2-5-1 parent[1] = 5, parent[5] = 2 순으로 정렬되어야 한다.
-'''
+
+def floyd_warshall(dist):
+    for k in range(N):
+        for i in range(N):
+            for j in range(N):
+                dist[i][j] = min(dist[i][j], dist[i][k]+dist[k][j])
+
+    for i in range(N):
+        for j in range(N):
+            if dist[i][j] == inf:
+                dist[i][j] = 0
+            else:
+                dist[i][j] = 1  # 갈 수 있다
+
 
 N, M = map(int, input().split())
 
-parent = [i for i in range(N)]
-child = [i for i in range(N)]
+inf = float('inf')
+X = [[inf for _ in range(N)] for _ in range(N)]
+Y = [[inf for _ in range(N)] for _ in range(N)]
 
 for _ in range(M):
     u, v = map(int, input().split())
-    parent[v-1] = u-1
-    child[u-1] = v-1
+    X[u-1][v-1] = 1  # u > v
+    Y[v-1][u-1] = 1  # v < u
 
-print(parent)
-print(child)
 
+floyd_warshall(X)
+floyd_warshall(Y)
+
+ans = set()
 for i in range(N):
-    if i == parent[i]:
-        print("no parent", i+1)
-    if i == child[i]:
-        print("no child", i+1)
+    if sum(X[i]) > N//2:  # 왜 반을 초과?
+        ans.add(i)
+    if sum(Y[i]) > N//2:
+        ans.add(i)
+
+# print(ans)
+print(len(ans))
