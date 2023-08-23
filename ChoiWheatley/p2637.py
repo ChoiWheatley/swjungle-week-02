@@ -14,9 +14,9 @@ W = int
 
 
 def create_indegree(graph: list[list[tuple[V, W]]]) -> list[int]:
-    N = len(graph)
-    indegrees: list[int] = [0 for _ in range(N)]
-    for i in range(N):
+    N = len(graph) - 1
+    indegrees: list[int] = [0 for _ in range(N + 1)]
+    for i in range(N + 1):
         # graph[i] -> [j, k] 일 경우, indegree[j], indegree[k] +=1씩 해준다.
         for j, _ in graph[i]:
             indegrees[j] += 1
@@ -24,18 +24,25 @@ def create_indegree(graph: list[list[tuple[V, W]]]) -> list[int]:
 
 
 def topological_sort(graph: list[list[tuple[V, W]]]) -> list[int]:
+    """위상정렬 결과를 리턴한다."""
     indegree = create_indegree(graph)
-    queue = deque(i for i, x in enumerate(indegree[1:], 1) if x == 0)
+    queue = deque()
     ret = [0]
+
+    for i, cnt in enumerate(indegree[1:], start=1):
+        if cnt == 0:
+            queue.append(i)
 
     while queue:
         cur = queue.popleft()
+        assert indegree[cur] == 0
         ret.append(cur)
 
-        for child, _ in graph[cur]:
-            indegree[child] -= 1
-            if indegree[child] == 0:
-                queue.append(child)
+        # child들의 indegree를 1씩 줄인다.
+        for child in graph[cur]:
+            indegree[child[0]] -= 1
+            if indegree[child[0]] == 0:
+                queue.append(child[0])
 
     return ret
 
@@ -50,7 +57,7 @@ def solve(graph: list[list[tuple[V, W]]], needs: list[list[tuple[V, W]]]) -> lis
         # 개수 역전파
         node = topo_ls[i]
         for dependency, cnt in needs[node]:
-            dp[dependency] += cnt * dp[i]
+            dp[dependency] += cnt * dp[node]
 
     return dp
 
