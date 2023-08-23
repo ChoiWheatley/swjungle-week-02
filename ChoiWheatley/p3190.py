@@ -5,16 +5,17 @@ from itertools import islice
 from typing import Iterable, List, Self, Set, Tuple
 
 INF = 100000
+SIDE = INF
 
 
-def int2tuple(i: int, side: int) -> Tuple[int, int]:
+def int2tuple(i: int) -> Tuple[int, int]:
     """side X side 보드의 위치 id가 주어졌을 때, 정확한 위치 (r, c)를 반환한다."""
-    return i // side, i % side
+    return i // SIDE, i % SIDE
 
 
-def tuple2int(rc: Tuple[int, int], side: int):
+def tuple2int(rc: Tuple[int, int]):
     """side X side 보드의 위치 (r, c)가 주어졌을 때, 아이디를 반환한다."""
-    return rc[0] * side + rc[1]
+    return rc[0] * SIDE + rc[1]
 
 
 class Rotation(Enum):
@@ -38,12 +39,10 @@ class Ori(Enum):
 class Snake:
     queue: deque[int]
     orientation: Ori
-    side: int
 
-    def __init__(self, side: int):
+    def __init__(self):
         self.queue = deque([0])
         self.orientation = Ori.E
-        self.side = side
 
     @property
     def ahead(self) -> int:
@@ -51,11 +50,11 @@ class Snake:
         head = self.head
         match self.orientation:
             case Ori.N:
-                return head - self.side
+                return head - SIDE
             case Ori.E:
                 return head + 1
             case Ori.S:
-                return head + self.side
+                return head + SIDE
             case Ori.W:
                 return head - 1
 
@@ -93,10 +92,10 @@ class GameController:
     side: int
     timestamp: int
 
-    def __init__(self, side: int, apples: List[Tuple[int, int]]):
-        self.snake = Snake(side)
+    def __init__(self, apples: List[Tuple[int, int]], side: int):
+        self.snake = Snake()
         self.side = side
-        self.apples = {tuple2int(tup, side) for tup in apples}
+        self.apples = {tuple2int(tup) for tup in apples}
         self.timestamp = 0
 
     def order(self, time: int, rotation: Rotation):
@@ -117,7 +116,7 @@ class GameController:
                 tail = True
                 self.apples.remove(ahead)
 
-            if not all(0 <= l < self.side for l in int2tuple(ahead, self.side)):
+            if not all(0 <= l < self.side for l in int2tuple(ahead)):
                 # FIXME - ahead가 우측 경계면에 닿지 않고 다음 줄 0번째 열로 점프하는 문제 발생
                 # 행, 열 하나라도 경계에 닿거나 벗어나게 되면
                 raise GameController.GameOver(time=self.timestamp + t + 1)
@@ -139,7 +138,7 @@ if __name__ == "__main__":
     for _ in range(k):
         r, c = [int(x) for x in input().split()]
         apples.append((r - 1, c - 1))
-    controller = GameController(side, apples)
+    controller = GameController(apples, side)
     l = int(input())
     orders = [input().split() for _ in range(l)]
     try:
