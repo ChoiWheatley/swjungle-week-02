@@ -7,7 +7,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from heapq import heappop, heappush
 from sys import stdin
-from typing import Any, Any, Generator
+from typing import Any, Any, Callable, Generator
 
 V = int  # vertex
 W = int  # weight
@@ -19,12 +19,16 @@ class Key:
     weight: W
 
 
-def dijkstra(GRAPH: list[list[V]], start: V) -> dict[V, W]:
+def dijkstra(GRAPH: list[list[V]], start: V, stop_pred: Callable[[W], bool]) -> dict[V, W]:
     queue: list[Key] = [Key(start, 0)]
     dist: dict[V, W] = defaultdict(W)
 
     while queue:
         cursor = heappop(queue)
+
+        if stop_pred(cursor.weight):
+            # 이제 더 이상 검사할 필요가 없음.
+            continue
 
         if cursor.vertex in dist:
             # 이미 찾은 거리
@@ -45,15 +49,14 @@ def sol(n: int, EDGES: list[tuple[V, V]], start: V, k: W) -> Generator[V, Any, A
     graph = [[] for _ in range(n + 1)]  # index starts from 1
     for s, e in EDGES:
         graph[s].append(e)
-        graph[e].append(s)
-    dist = dijkstra(graph, start)
+    dist = dijkstra(graph, start, lambda weight: weight > k)
 
     filtered = [v for v, w in dist.items() if w == k]
     if len(filtered) == 0:
         yield -1
         return
 
-    yield from filtered
+    yield from sorted(filtered)
 
 
 if __name__ == "__main__":
