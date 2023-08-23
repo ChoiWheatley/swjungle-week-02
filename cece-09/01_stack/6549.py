@@ -34,14 +34,14 @@ while True:
             top = histogram[t]
             # top이 curr보다 작을때까지
             # 즉, curr보다 크거나 같은 것을 빼면서 최대 넓이를 구한다
-            while stack and top >= curr:
-                chk = stack[-1]
-                p = stack.pop()
-                top = histogram[p]
-                if stack:
-                    max_area = max(
-                        max_area, histogram[chk]*((i+1)-(stack[-1]+1)-1))
-                print(f"  stack에서 pop [{p}] {top}, max={max_area} | {stack}")
+            # while stack and top >= curr:
+            #     chk = stack[-1]
+            #     p = stack.pop()
+            #     top = histogram[p]
+            #     if stack:
+            #         max_area = max(
+            #             max_area, histogram[chk]*((i+1)-(stack[-1]+1)-1))
+            #     print(f"  stack에서 pop [{p}] {top}, max={max_area} | {stack}")
 
         # curr가 top보다 크거나 같다, stack에 push
         else:
