@@ -5,6 +5,7 @@
 2. DFS 돌리면서 각 곱셈 결과를 더한다
 """
 
+from collections import deque
 from sys import stdin
 
 
@@ -22,35 +23,51 @@ def create_indegree(graph: list[list[tuple[V, W]]]) -> list[int]:
     return indegrees
 
 
-def dfs(idx: V, pi: int) -> int:
-    """
-    - pi: 중간값은 곱하고
-    - return: 리턴값끼리는 더한다
-    """
-    global g_graph
-    if len(g_graph[idx]) == 0:
-        return pi
+def topological_sort(graph: list[list[tuple[V, W]]]) -> list[int]:
+    indegree = create_indegree(graph)
+    queue = deque(i for i, x in enumerate(indegree[1:], 1) if x == 0)
+    ret = [0]
 
-    adder = 0
-    for v, w in g_graph[idx]:
-        adder += dfs(v, pi * w)
+    while queue:
+        cur = queue.popleft()
+        ret.append(cur)
 
-    return adder
+        for child, _ in graph[cur]:
+            indegree[child] -= 1
+            if indegree[child] == 0:
+                queue.append(child)
+
+    return ret
+
+
+def solve(graph: list[list[tuple[V, W]]], needs: list[list[tuple[V, W]]]) -> list[int]:
+    N = len(needs) - 1
+    topo_ls = topological_sort(graph)  # topo_ls의 마지막 원소는 완제품이다.
+    dp = [0 for _ in range(N + 1)]
+    dp[topo_ls[N]] = 1
+
+    for i in range(N, 0, -1):
+        # 개수 역전파
+        node = topo_ls[i]
+        for dependency, cnt in needs[node]:
+            dp[dependency] += cnt * dp[i]
+
+    return dp
 
 
 n = int(stdin.readline().strip())
 m = int(stdin.readline().strip())
 g_graph: list[list[tuple[V, W]]] = [[] for _ in range(n + 1)]  # index starts from 1
+g_needs: list[list[tuple[V, W]]] = [[] for _ in range(n + 1)]  # reversed graph
 
 for _ in range(m):
     x, y, k = (int(x) for x in stdin.readline().split())
     # NOTE - y -> x 관계이다
     g_graph[y].append((x, k))
+    g_needs[x].append((y, k))
 
-indegree = create_indegree(g_graph)
+parts = solve(g_graph, g_needs)
 
-# indegree가 0인 원소들이 바로 기본부품이다. 이 녀석들을 가지고 dfs를 돌려보자.
-for idx, degree in enumerate(indegree[1:], start=1):
-    if degree == 0:
-        amt = dfs(idx, 1)
-        print(idx, amt)
+for i, x in enumerate(parts[1:], start=1):
+    if len(g_needs[i]) == 0:
+        print(i, x)
