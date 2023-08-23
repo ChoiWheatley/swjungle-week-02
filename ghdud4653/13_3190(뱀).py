@@ -1,5 +1,5 @@
 import sys
-
+#
 N = int(input())
 K = int(input())
 alist = [tuple(map(int,input().split())) for _ in range(K)]
