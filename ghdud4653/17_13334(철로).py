@@ -1,7 +1,7 @@
 import sys
 import heapq
 n = int(input())
-
+#
 datas = []
 for _ in range(n):
     a, b = list(map(int, sys.stdin.readline().split()))

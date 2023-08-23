@@ -1,6 +1,6 @@
 from sys import stdin, setrecursionlimit
 setrecursionlimit(10**9)
-
+#
 def dfs(v, cnt): # v: 정점 번호, cnt : 실외와 연결된 실내 노드 개수 카운트
     visited[v] = True
 
